@@ -1,77 +1,79 @@
 // ============================================
-// JSON Formatting Only - Preserves escape sequences
+// Dark Mode - Version 2.0
+// Handles theme switching with localStorage
 // ============================================
 
-// JSON formatter that preserves escape sequences (like \u003c)
-function formatJSONPreservingEscapes(jsonStr) {
-    try {
-        const obj = JSON.parse(jsonStr);
-        let pretty = JSON.stringify(obj, null, 4);
-        // Replace < and > back to \u003c and \u003e
-        pretty = pretty.replace(/</g, '\\u003c');
-        pretty = pretty.replace(/>/g, '\\u003e');
-        return pretty;
-    } catch(e) {
-        try {
-            let fixed = jsonStr.replace(/,(\s*[}\]])/g, '$1');
-            const obj = JSON.parse(fixed);
-            let pretty = JSON.stringify(obj, null, 4);
-            pretty = pretty.replace(/</g, '\\u003c');
-            pretty = pretty.replace(/>/g, '\\u003e');
-            return pretty;
-        } catch(e2) {
-            throw new Error('Invalid JSON');
-        }
+let isDarkMode = false;
+const darkModeToggle = document.getElementById('darkModeToggle');
+const lightLabel = document.getElementById('lightLabel');
+const darkLabel = document.getElementById('darkLabel');
+
+// Load saved preference
+function loadThemePreference() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        enableDarkMode();
+        if (darkModeToggle) darkModeToggle.checked = true;
+    } else {
+        disableDarkMode();
+        if (darkModeToggle) darkModeToggle.checked = false;
     }
 }
 
-// Extract and format JSON from mixed content
-function extractAndFormatJSON(text) {
-    let result = text;
-    let matches = [];
-    let braceCount = 0;
-    let bracketCount = 0;
-    let start = -1;
-    let inString = false;
+function enableDarkMode() {
+    document.body.classList.add('dark-mode');
+    isDarkMode = true;
     
-    for (let i = 0; i < result.length; i++) {
-        const char = result[i];
-        
-        if (char === '"' && (i === 0 || result[i-1] !== '\\')) {
-            inString = !inString;
-        }
-        
-        if (!inString) {
-            if (char === '{') {
-                if (braceCount === 0 && bracketCount === 0) start = i;
-                braceCount++;
-            } else if (char === '}') {
-                braceCount--;
-                if (braceCount === 0 && bracketCount === 0 && start !== -1) {
-                    matches.push({start: start, end: i + 1});
-                    start = -1;
-                }
-            } else if (char === '[') {
-                if (braceCount === 0 && bracketCount === 0) start = i;
-                bracketCount++;
-            } else if (char === ']') {
-                bracketCount--;
-                if (bracketCount === 0 && braceCount === 0 && start !== -1) {
-                    matches.push({start: start, end: i + 1});
-                    start = -1;
-                }
-            }
-        }
+    // Update Ace Editor theme
+    if (typeof editor !== 'undefined' && editor) {
+        editor.setTheme("ace/theme/monokai");
     }
     
-    for (let i = matches.length - 1; i >= 0; i--) {
-        const match = matches[i];
-        const jsonStr = result.substring(match.start, match.end);
-        try {
-            const formatted = formatJSONPreservingEscapes(jsonStr);
-            result = result.substring(0, match.start) + formatted + result.substring(match.end);
-        } catch(e) {}
+    // Update Compare Mode editors if active
+    if (window.compareMode && typeof window.compareMode.updateTheme === 'function') {
+        window.compareMode.updateTheme('dark');
     }
     
-    return result;
+    // Update labels
+    if (lightLabel) lightLabel.classList.remove('active');
+    if (darkLabel) darkLabel.classList.add('active');
+    
+    localStorage.setItem('theme', 'dark');
 }
+
+function disableDarkMode() {
+    document.body.classList.remove('dark-mode');
+    isDarkMode = false;
+    
+    // Update Ace Editor theme
+    if (typeof editor !== 'undefined' && editor) {
+        editor.setTheme("ace/theme/chrome");
+    }
+    
+    // Update Compare Mode editors if active
+    if (window.compareMode && typeof window.compareMode.updateTheme === 'function') {
+        window.compareMode.updateTheme('light');
+    }
+    
+    // Update labels
+    if (lightLabel) lightLabel.classList.add('active');
+    if (darkLabel) darkLabel.classList.remove('active');
+    
+    localStorage.setItem('theme', 'light');
+}
+
+function toggleDarkMode() {
+    if (isDarkMode) {
+        disableDarkMode();
+    } else {
+        enableDarkMode();
+    }
+}
+
+// Event listener
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('change', toggleDarkMode);
+}
+
+// Initialize
+loadThemePreference();

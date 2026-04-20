@@ -1,5 +1,5 @@
 // ============================================
-// Main Application Logic
+// Main Application Logic - Version 2.0
 // ============================================
 
 // Initialize Ace Editor
@@ -26,10 +26,13 @@ const xmlLabel = document.getElementById('xmlLabel');
 const jsonLabel = document.getElementById('jsonLabel');
 const fileInput = document.getElementById('fileInput');
 
-// Current mode (xml or json)
-let currentMode = 'xml'; // 'xml' or 'json'
+// Current mode
+let currentMode = 'xml';
 
-// Undo/Redo Stack
+// ============================================
+// UNDO/REDO STACK
+// ============================================
+
 let undoStack = [];
 let redoStack = [];
 let isUndoRedoOperation = false;
@@ -74,7 +77,15 @@ function redo() {
 
 saveToUndoStack();
 
-// Auto-detect mode based on content
+editor.session.on('change', () => {
+    saveToUndoStack();
+    autoDetectMode();
+});
+
+// ============================================
+// AUTO DETECT MODE
+// ============================================
+
 function autoDetectMode() {
     const content = editor.getValue();
     if (!content.trim() || content === "Paste your XML/JSON here...") return;
@@ -94,21 +105,97 @@ function autoDetectMode() {
     }
 }
 
-editor.session.on('change', () => {
-    saveToUndoStack();
-    autoDetectMode();
-});
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
 function setStatus(msg, isError = false) {
     statusSpan.innerHTML = (isError ? '❌ ' : '✅ ') + msg;
     setTimeout(() => {
         if (statusSpan.innerHTML === (isError ? '❌ ' : '✅ ') + msg) {
-            statusSpan.innerHTML = '✅ Ready (Ctrl+Z = Undo, Ctrl+Y = Redo, Ctrl+S = Download, Ctrl+F = Find/Replace)';
+            statusSpan.innerHTML = '✅ Version 2.0 Ready (Ctrl+Z = Undo, Ctrl+Y = Redo, Ctrl+S = Download, Ctrl+F = Find/Replace)';
         }
     }, 3000);
 }
 
-// Main Format Function - Uses current mode
+function formatXML(xmlStr) {
+    if (typeof vkbeautify !== 'undefined' && vkbeautify.xml) {
+        return vkbeautify.xml(xmlStr, 4);
+    }
+    return xmlStr;
+}
+
+function formatJSONPreservingEscapes(jsonStr) {
+    try {
+        const obj = JSON.parse(jsonStr);
+        let pretty = JSON.stringify(obj, null, 4);
+        pretty = pretty.replace(/</g, '\\u003c');
+        pretty = pretty.replace(/>/g, '\\u003e');
+        return pretty;
+    } catch(e) {
+        try {
+            let fixed = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+            const obj = JSON.parse(fixed);
+            let pretty = JSON.stringify(obj, null, 4);
+            pretty = pretty.replace(/</g, '\\u003c');
+            pretty = pretty.replace(/>/g, '\\u003e');
+            return pretty;
+        } catch(e2) {
+            throw new Error('Invalid JSON');
+        }
+    }
+}
+
+function extractAndFormatJSON(text) {
+    let result = text;
+    let matches = [];
+    let braceCount = 0;
+    let bracketCount = 0;
+    let start = -1;
+    let inString = false;
+    
+    for (let i = 0; i < result.length; i++) {
+        const char = result[i];
+        
+        if (char === '"' && (i === 0 || result[i-1] !== '\\')) {
+            inString = !inString;
+        }
+        
+        if (!inString) {
+            if (char === '{') {
+                if (braceCount === 0 && bracketCount === 0) start = i;
+                braceCount++;
+            } else if (char === '}') {
+                braceCount--;
+                if (braceCount === 0 && bracketCount === 0 && start !== -1) {
+                    matches.push({start: start, end: i + 1});
+                    start = -1;
+                }
+            } else if (char === '[') {
+                if (braceCount === 0 && bracketCount === 0) start = i;
+                bracketCount++;
+            } else if (char === ']') {
+                bracketCount--;
+                if (bracketCount === 0 && braceCount === 0 && start !== -1) {
+                    matches.push({start: start, end: i + 1});
+                    start = -1;
+                }
+            }
+        }
+    }
+    
+    for (let i = matches.length - 1; i >= 0; i--) {
+        const match = matches[i];
+        const jsonStr = result.substring(match.start, match.end);
+        try {
+            const formatted = formatJSONPreservingEscapes(jsonStr);
+            result = result.substring(0, match.start) + formatted + result.substring(match.end);
+        } catch(e) {}
+    }
+    
+    return result;
+}
+
 function formatContent() {
     let text = editor.getValue();
     if (!text.trim() || text === "Paste your XML/JSON here...") {
@@ -119,19 +206,14 @@ function formatContent() {
     saveToUndoStack();
     setStatus('Formatting...');
     
+    let trimmed = text.trim();
     let result = text;
     
-    // Format based on current mode (XML or JSON)
     if (currentMode === 'json') {
-        // Try to format as JSON
         try {
-            // First check if it's pure JSON
-            let trimmed = text.trim();
-            if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || 
-                (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+            if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
                 result = formatJSONPreservingEscapes(text);
             } else {
-                // Mixed content - extract JSON
                 result = extractAndFormatJSON(text);
             }
             editor.setValue(result);
@@ -139,23 +221,15 @@ function formatContent() {
             saveToUndoStack();
             setStatus('JSON formatted');
             return;
-        } catch(e) {
-            setStatus('JSON format error: ' + e.message, true);
-            return;
-        }
-    } 
-    else if (currentMode === 'xml') {
-        // Format as XML
+        } catch(e) {}
+    } else if (currentMode === 'xml') {
         try {
-            let trimmed = text.trim();
             if (trimmed.startsWith('<?xml') || (trimmed.startsWith('<') && !trimmed.startsWith('{') && !trimmed.startsWith('['))) {
                 result = formatXML(text);
             } else {
-                // Mixed content - extract XML
                 let xmlMatch = text.match(/<[\s\S]*>/);
                 if (xmlMatch) {
-                    let formattedXML = formatXML(xmlMatch[0]);
-                    result = text.replace(xmlMatch[0], '\n' + formattedXML + '\n');
+                    result = text.replace(xmlMatch[0], '\n' + formatXML(xmlMatch[0]) + '\n');
                 } else {
                     throw new Error('No XML found');
                 }
@@ -233,7 +307,7 @@ function handleFileUpload(e) {
         saveToUndoStack();
         editor.setValue(evt.target.result);
         editor.gotoLine(0);
-        autoDetectMode(); // Auto-detect after loading
+        autoDetectMode();
         saveToUndoStack();
         setStatus(`Loaded: ${file.name}`);
     };
@@ -249,20 +323,19 @@ expandBtn.addEventListener('click', expandAll);
 collapseBtn.addEventListener('click', collapseAll);
 fileInput.addEventListener('change', handleFileUpload);
 
-// Slider toggle - changes the mode and formats accordingly
 modeToggle.addEventListener('change', function() {
     if (modeToggle.checked) {
         currentMode = 'json';
         xmlLabel.classList.remove('active');
         jsonLabel.classList.add('active');
         editor.session.setMode("ace/mode/json");
-        setStatus('JSON mode selected - Click Format to beautify JSON');
+        setStatus('JSON mode selected');
     } else {
         currentMode = 'xml';
         xmlLabel.classList.add('active');
         jsonLabel.classList.remove('active');
         editor.session.setMode("ace/mode/xml");
-        setStatus('XML mode selected - Click Format to beautify XML');
+        setStatus('XML mode selected');
     }
 });
 
@@ -280,7 +353,10 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize chat and status
-initChat();
-setStatus('Ready');
+// Initialize chat
+if (typeof initChat === 'function') {
+    initChat();
+}
+
 autoDetectMode();
+setStatus('Version 2.0 Ready! Compare Mode and Dark Mode added!');
