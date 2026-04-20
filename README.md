@@ -11,6 +11,15 @@ A powerful web-based tool to format, beautify, and analyze XML and JSON data wit
 
 ## ✨ Features
 
+### Version 2.0 New Features
+
+- 🔍 **Compare Mode** - Side-by-side comparison of two XML/JSON files
+- 🌙 **Dark Mode** - Toggle between Light and Dark themes (saves your preference)
+- 📊 **Diff Summary** - Shows all differences with line numbers
+- 🔄 **Copy Between Editors** - Copy left to right or right to left
+- 
+### Existing Features
+
 - 📄 **XML/JSON Formatting** - Beautify and pretty-print your data with proper indentation
 - 🔍 **Code Folding** - Expand/collapse sections for easy navigation
 - 💬 **AI Chat Assistant (Jarvis)** - Ask questions about your data
