@@ -1,0 +1,600 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Consolas', monospace; height: 100vh; display: flex; flex-direction: column; background: #f4f6f9; }
+
+/* Toolbar Styles */
+.toolbar { 
+    background: #2c3e50; 
+    padding: 8px 15px; 
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: wrap; 
+    align-items: center; 
+    justify-content: space-between;
+    border-bottom: 2px solid #4a9eff;
+}
+
+.toolbar-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.toolbar button { 
+    padding: 5px 12px; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-size: 12px; 
+    font-weight: bold; 
+    transition: all 0.2s ease;
+}
+
+.btn-format { background: #27ae60; color: white; }
+.btn-clear { background: #e74c3c; color: white; }
+.btn-copy { background: #3498db; color: white; }
+.btn-upload { background: #9b59b6; color: white; }
+.btn-expand { background: #16a085; color: white; }
+.btn-collapse { background: #c0392b; color: white; }
+.btn-compare { background: #e67e22; color: white; }
+
+.version-badge {
+    font-size: 9px;
+    background: #4a9eff;
+    padding: 2px 5px;
+    border-radius: 8px;
+    margin-left: 6px;
+}
+
+/* Dark Mode Toggle Switch - Same style as XML/JSON slider */
+.darkmode-switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #34495e;
+    padding: 3px 8px;
+    border-radius: 25px;
+}
+
+.darkmode-switch span {
+    font-size: 11px;
+    font-weight: bold;
+    color: #bdc3c7;
+}
+
+.darkmode-switch span.active {
+    color: white;
+}
+
+.darkmode-switch .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.darkmode-switch .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.darkmode-switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #27ae60;
+    transition: 0.3s;
+    border-radius: 20px;
+}
+
+.darkmode-switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.darkmode-switch input:checked + .slider {
+    background-color: #1abc9c;
+}
+
+.darkmode-switch input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* Slider Toggle Switch for XML/JSON */
+.mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #34495e;
+    padding: 3px 8px;
+    border-radius: 25px;
+}
+
+.mode-switch span {
+    font-size: 11px;
+    font-weight: bold;
+    color: #bdc3c7;
+}
+
+.mode-switch span.active {
+    color: white;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #27ae60;
+    transition: 0.3s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #e67e22;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.title {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    letter-spacing: 1px;
+    font-family: 'Segoe UI', 'Consolas', monospace;
+    display: flex;
+    align-items: center;
+}
+
+/* Editor Container */
+.editor-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: white;
+}
+
+#editor {
+    width: 100%;
+    height: 100%;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+}
+
+/* ============================================ */
+/* COMPARE MODE STYLES */
+/* ============================================ */
+
+.compare-container {
+    background: white;
+    border-bottom: 2px solid #4a9eff;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    height: 50%;
+    min-height: 300px;
+    flex: 1;
+}
+
+.compare-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+    background: #2c3e50;
+    color: white;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.compare-header span {
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.close-compare {
+    background: #e74c3c;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    padding: 2px 8px;
+    font-size: 11px;
+}
+
+.compare-editors {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    min-height: 0;
+    margin-bottom: 6px;
+}
+
+.compare-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #4a9eff;
+    border-radius: 6px;
+    overflow: hidden;
+    background: white;
+}
+
+.compare-editor-title {
+    background: #2c3e50;
+    color: white;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#leftEditor, #rightEditor {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+}
+
+.compare-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #4a9eff;
+    font-size: 16px;
+    background: #ecf0f1;
+    padding: 0 8px;
+    border-radius: 50%;
+    min-width: 40px;
+}
+
+.diff-summary {
+    background: #ecf0f1;
+    padding: 6px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    max-height: 80px;
+    overflow-y: auto;
+    font-size: 10px;
+    font-family: 'Segoe UI', sans-serif;
+    border-left: 3px solid #4a9eff;
+}
+
+.compare-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    justify-content: center;
+}
+
+.btn-compare-now, .btn-copy-left, .btn-copy-right {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.btn-compare-now { background: #27ae60; color: white; }
+.btn-copy-left { background: #3498db; color: white; }
+.btn-copy-right { background: #3498db; color: white; }
+
+/* ============================================ */
+/* AI CHAT BOT STYLES */
+/* ============================================ */
+
+.chat-bot {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    z-index: 1000;
+}
+
+.chat-button {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #4a9eff, #27ae60);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.chat-button:hover {
+    transform: scale(1.05);
+}
+
+.chat-button span {
+    font-size: 24px;
+}
+
+.chat-window {
+    position: absolute;
+    bottom: 65px;
+    right: 0;
+    width: 350px;
+    height: 450px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+
+.chat-window.open {
+    display: flex;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #2c3e50, #1a1a2e);
+    color: white;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header h4 {
+    margin: 0;
+    font-size: 13px;
+}
+
+.chat-header .close-chat {
+    cursor: pointer;
+    font-size: 16px;
+    background: none;
+    border: none;
+    color: white;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.message {
+    margin-bottom: 8px;
+    display: flex;
+}
+
+.message.bot {
+    justify-content: flex-start;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message-bubble {
+    max-width: 80%;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.4;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.message.bot .message-bubble {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.message.user .message-bubble {
+    background: #4a9eff;
+    color: white;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 8px;
+    border-top: 1px solid #ddd;
+    background: white;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    outline: none;
+    font-size: 11px;
+}
+
+.chat-input-area button {
+    margin-left: 6px;
+    padding: 5px 12px;
+    background: #4a9eff;
+    border: none;
+    border-radius: 15px;
+    color: white;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+/* ============================================ */
+/* STATUS BAR STYLES */
+/* ============================================ */
+
+.status-bar { 
+    background: #ecf0f1; 
+    padding: 4px 15px; 
+    font-size: 11px; 
+    display: flex; 
+    justify-content: space-between; 
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.creator { 
+    font-size: 10px; 
+    color: #7f8c8d; 
+    font-style: italic; 
+}
+
+/* ============================================ */
+/* DARK MODE STYLES */
+/* ============================================ */
+
+body.dark-mode {
+    background: #121212;
+}
+
+body.dark-mode .editor-container {
+    background: #1e1e1e;
+}
+
+body.dark-mode .compare-container {
+    background: #1e1e1e;
+}
+
+body.dark-mode .ace_editor {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+
+body.dark-mode .status-bar {
+    background: #0a0a0a;
+    color: #aaaaaa;
+}
+
+body.dark-mode .status-bar .creator {
+    color: #888888;
+}
+
+body.dark-mode .chat-window {
+    background: #1e1e1e;
+}
+
+body.dark-mode .chat-messages {
+    background: #121212;
+}
+
+body.dark-mode .message.bot .message-bubble {
+    background: #2c2c2c;
+    color: #e0e0e0;
+}
+
+body.dark-mode .diff-summary {
+    background: #2c2c2c;
+    color: #e0e0e0;
+}
+
+body.dark-mode .diff-left {
+    background: #3a1a1a;
+    color: #e74c3c;
+}
+
+body.dark-mode .diff-right {
+    background: #1a3a2a;
+    color: #27ae60;
+}
+
+body.dark-mode .compare-editor {
+    background: #1e1e1e;
+}
+
+body.dark-mode .compare-editor-title {
+    background: #0a0a0a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .compare-vs {
+    background: #2c2c2c;
+    color: #4a9eff;
+}
+
+body.dark-mode .chat-input-area {
+    background: #1e1e1e;
+    border-top-color: #333333;
+}
+
+body.dark-mode .chat-input-area input {
+    background: #2c2c2c;
+    color: #e0e0e0;
+    border-color: #444444;
+}
+
+body.dark-mode .chat-input-area input::placeholder {
+    color: #888888;
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN */
+/* ============================================ */
+
+@media (max-width: 768px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .toolbar-buttons {
+        justify-content: center;
+    }
+    
+    .compare-editors {
+        flex-direction: column;
+    }
+    
+    .compare-vs {
+        padding: 5px 0;
+        min-width: auto;
+    }
+    
+    .chat-window {
+        width: 300px;
+        height: 400px;
+        right: -10px;
+    }
+}
