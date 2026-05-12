@@ -116,6 +116,9 @@ function applyEditorSettings() {
 
   editor.setFontSize(parseInt(currentSettings.fontSize));
   editor.container.style.fontFamily = currentSettings.fontFamily;
+  // Also target Ace's internal content element
+  const aceContent = editor.container.querySelector('.ace_content');
+  if (aceContent) aceContent.style.fontFamily = currentSettings.fontFamily;
   editor.session.setTabSize(parseInt(currentSettings.tabSize));
   editor.session.setUseWrapMode(currentSettings.wordWrap);
   editor.renderer.setShowGutter(currentSettings.lineNumbers);
@@ -125,6 +128,9 @@ function applyEditorSettings() {
    typeof rightEditor !== 'undefined' ? rightEditor : null].forEach(ed => {
     if (!ed) return;
     ed.setFontSize(parseInt(currentSettings.fontSize));
+    ed.container.style.fontFamily = currentSettings.fontFamily;
+    const aceContent2 = ed.container.querySelector('.ace_content');
+    if (aceContent2) aceContent2.style.fontFamily = currentSettings.fontFamily;
     ed.session.setTabSize(parseInt(currentSettings.tabSize));
     ed.session.setUseWrapMode(currentSettings.wordWrap);
     ed.renderer.setShowGutter(currentSettings.lineNumbers);

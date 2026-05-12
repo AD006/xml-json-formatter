@@ -34,6 +34,13 @@ function enableCompareMode() {
   getEl('compareView').style.display = 'flex';
 
   initCompareEditors(current);
+
+  // Resize editors after showing compare view
+  setTimeout(() => {
+    if (leftEditor) leftEditor.resize();
+    if (rightEditor) rightEditor.resize();
+  }, 50);
+
   setStatus('Compare mode enabled — paste content in both panels');
 }
 
